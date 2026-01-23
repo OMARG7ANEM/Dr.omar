@@ -74,11 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs = 15000): Promise<T> => {
+  const withTimeout = async <T,>(promise: Promise<T>, timeoutMs = 60000): Promise<T> => {
     let timeoutHandle: ReturnType<typeof setTimeout>;
 
     const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutHandle = setTimeout(() => reject(new Error('Request timed out. Please check your internet connection.')), timeoutMs);
+      timeoutHandle = setTimeout(() => reject(new Error('Request timed out. Please check your internet connection or firewall settings.')), timeoutMs);
     });
 
     return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutHandle));
