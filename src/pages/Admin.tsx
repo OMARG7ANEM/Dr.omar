@@ -48,16 +48,16 @@ interface Project {
 const Admin = () => {
   const { user, loading, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
-  
+
   // State for Messages
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
   const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null);
-  
+
   // State for Projects
   const [projects, setProjects] = useState<Project[]>([]);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  
+
   // Loading states
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
@@ -172,7 +172,7 @@ const Admin = () => {
     e.preventDefault();
     setIsUploading(true);
     console.log("Starting upload process...");
-    
+
     try {
       let imageUrl = projectForm.image_url;
       let fileUrl = projectForm.file_url;
@@ -213,7 +213,7 @@ const Admin = () => {
         if (error) throw error;
         toast.success("Project created successfully");
       }
-      
+
       setIsProjectDialogOpen(false);
       resetForm();
       fetchProjects();
@@ -283,6 +283,46 @@ const Admin = () => {
 
   const unreadCount = submissions.filter((s) => !s.is_read).length;
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === submissions.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(submissions.map(s => s.id)));
+    }
+  };
+
+  const toggleSelect = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const deleteSelected = async () => {
+    if (!confirm(`Delete ${selectedIds.size} messages?`)) return;
+
+    try {
+      const ids = Array.from(selectedIds);
+      const { error } = await supabase.from("contact_submissions").delete().in("id", ids);
+
+      if (error) throw error;
+
+      setSubmissions(prev => prev.filter(s => !selectedIds.has(s.id)));
+      setSelectedIds(new Set());
+      setSelectedSubmission(null);
+      toast.success("Messages deleted");
+    } catch (error) {
+      console.error("Error deleting messages:", error);
+      toast.error("Failed to delete messages");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-primary border-b border-border/10 sticky top-0 z-50">
@@ -309,10 +349,27 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="messages" className="space-y-6">
-            <div className="mb-6">
-              <h2 className="font-display text-2xl font-bold text-foreground">Contact Submissions</h2>
-              <p className="text-muted-foreground">{unreadCount > 0 ? `You have ${unreadCount} unread message${unreadCount > 1 ? "s" : ""}` : "All messages have been read"}</p>
+            <div className="flex justify-between items-end mb-6">
+              <div>
+                <h2 className="font-display text-2xl font-bold text-foreground">Contact Submissions</h2>
+                <p className="text-muted-foreground">{unreadCount > 0 ? `You have ${unreadCount} unread message${unreadCount > 1 ? "s" : ""}` : "All messages have been read"}</p>
+              </div>
+
+              {submissions.length > 0 && (
+                <div className="flex items-center gap-2">
+                  {selectedIds.size > 0 && (
+                    <Button variant="destructive" size="sm" onClick={deleteSelected} className="gap-2 animate-in fade-in slide-in-from-right-4">
+                      <Trash2 className="w-4 h-4" />
+                      Delete ({selectedIds.size})
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={toggleSelectAll}>
+                    {selectedIds.size === submissions.length ? "Deselect All" : "Select All"}
+                  </Button>
+                </div>
+              )}
             </div>
+
             {isLoadingMessages ? (
               <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>
             ) : submissions.length === 0 ? (
@@ -324,10 +381,18 @@ const Admin = () => {
               <div className="grid lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 space-y-3">
                   {submissions.map((submission) => (
-                    <button key={submission.id} onClick={() => { setSelectedSubmission(submission); if (!submission.is_read) markAsRead(submission.id); }} className={`w-full text-left p-4 rounded-xl border transition-all ${selectedSubmission?.id === submission.id ? "bg-accent/10 border-accent/30" : "bg-card border-border/50 hover:border-accent/20"}`}>
+                    <button key={submission.id} onClick={() => { setSelectedSubmission(submission); if (!submission.is_read) markAsRead(submission.id); }} className={`w-full text-left p-4 rounded-xl border transition-all relative ${selectedSubmission?.id === submission.id ? "bg-accent/10 border-accent/30" : "bg-card border-border/50 hover:border-accent/20"}`}>
+                      <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(submission.id)}
+                          onChange={(e) => { e.stopPropagation(); toggleSelect(submission.id, e as any); }}
+                          className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
+                        />
+                      </div>
                       <div className="flex items-start gap-3">
                         <div className="mt-1">{submission.is_read ? <CheckCircle className="w-4 h-4 text-muted-foreground" /> : <Circle className="w-4 h-4 text-accent fill-accent" />}</div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 pr-6">
                           <div className="flex justify-between gap-2 mb-1"><span className={`font-medium truncate ${!submission.is_read ? "text-foreground" : "text-muted-foreground"}`}>{submission.name}</span></div>
                           <p className="text-sm text-muted-foreground truncate">{submission.message}</p>
                           <p className="text-xs text-muted-foreground/70 mt-1">{format(new Date(submission.created_at), "MMM d, yyyy")}</p>
@@ -367,14 +432,14 @@ const Admin = () => {
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {projects.map((project) => (
-                  <div key={project.id} className="bg-card rounded-xl border border-border/50 overflow-hidden group">
-                     <div className="aspect-video w-full bg-muted relative">
+                  <div key={project.id} className="bg-card rounded-xl border border-border/50 overflow-hidden group flex flex-col h-full">
+                    <div className="aspect-video w-full bg-muted relative">
                       {project.image_url ? <img src={project.image_url} alt={project.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-muted-foreground/20">{project.title.charAt(0)}</div>}
                     </div>
-                    <div className="p-4">
+                    <div className="p-4 flex flex-col flex-grow">
                       <h3 className="font-bold text-lg mb-2">{project.title}</h3>
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{project.description}</p>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mt-auto">
                         <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => openProjectDialog(project)}><Pencil className="w-3 h-3" /> Edit</Button>
                         <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteProject(project.id)}><Trash2 className="w-3 h-3" /></Button>
                       </div>
@@ -398,7 +463,7 @@ const Admin = () => {
                 <label className="text-sm font-medium">Description</label>
                 <Textarea required value={projectForm.description} onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })} placeholder="Brief description..." rows={4} />
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Link (External URL)</label>
                 <Input value={projectForm.link} onChange={(e) => setProjectForm({ ...projectForm, link: e.target.value })} placeholder="https://..." />
@@ -416,7 +481,7 @@ const Admin = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project File (PDF/Doc)</label>
-                 <div className="flex gap-2 items-center">
+                <div className="flex gap-2 items-center">
                   <Input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setDocFile(e.target.files?.[0] || null)} className="cursor-pointer" />
                 </div>
                 {projectForm.file_url && !docFile && (

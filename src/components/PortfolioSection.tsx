@@ -52,7 +52,7 @@ const PortfolioSection = () => {
               {projects.map((project) => (
                 <div
                   key={project.id}
-                  className="group bg-card rounded-2xl border border-border/50 overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-1"
+                  className="group bg-card rounded-2xl border border-border/50 overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 flex flex-col h-full"
                 >
                   <div className="aspect-video w-full bg-muted relative overflow-hidden">
                     {project.image_url ? (
@@ -67,27 +67,29 @@ const PortfolioSection = () => {
                       </div>
                     )}
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 flex flex-col flex-grow">
                     <h3 className="font-display text-xl font-bold text-foreground mb-3">
                       {project.title}
                     </h3>
                     <p className="text-muted-foreground mb-6 line-clamp-3">
                       {project.description}
                     </p>
-                    {project.link && (
-                      <Button variant="outline" className="w-full gap-2 mb-2" asChild>
-                        <a href={project.link} target="_blank" rel="noopener noreferrer">
-                          View Project Links <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </Button>
-                    )}
-                    {project.file_url && (
-                      <Button variant="default" className="w-full gap-2" asChild>
-                        <a href={project.file_url} target="_blank" rel="noopener noreferrer" download>
-                          Download Project Files <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </Button>
-                    )}
+                    <div className="mt-auto">
+                      {project.link && (
+                        <Button variant="outline" className="w-full gap-2 mb-2" asChild>
+                          <a href={project.link} target="_blank" rel="noopener noreferrer">
+                            View Project Links <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {project.file_url && (
+                        <Button variant="default" className="w-full gap-2" asChild>
+                          <a href={project.file_url} target="_blank" rel="noopener noreferrer" download>
+                            Download Project Files <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

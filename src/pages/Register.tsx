@@ -24,9 +24,15 @@ const Register = () => {
       return;
     }
 
+    // DEBUG: Check values
+    console.log("Attempting register with:", email);
+    if (!import.meta.env.VITE_SUPABASE_URL) alert("DEBUG: VITE_SUPABASE_URL is MISSING!");
+
     const { error } = await signUp(email, password, fullName);
 
     if (error) {
+      console.error("Register Error:", error);
+      alert("Registration Failed: " + error.message);
       toast.error(error.message);
     } else {
       toast.success("Account created successfully!");

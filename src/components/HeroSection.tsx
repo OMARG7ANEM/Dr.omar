@@ -34,7 +34,7 @@ const HeroSection = () => {
         </h1>
 
         <p className="animate-fade-up-delay-2 max-w-2xl mx-auto text-lg md:text-xl text-primary-foreground/70 mb-10 leading-relaxed font-light">
-          Transforming research data into published success. 5+ years helping researchers 
+          Transforming research data into published success. 5+ years helping researchers
           and PhD students achieve their publication goals in prestigious Q1 journals.
         </p>
 
@@ -51,7 +51,7 @@ const HeroSection = () => {
 
       {/* Scroll indicator */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-float">
-        <button 
+        <button
           onClick={scrollToAbout}
           className="p-3 rounded-full border border-accent/30 text-accent/70 hover:text-accent hover:border-accent transition-colors"
         >

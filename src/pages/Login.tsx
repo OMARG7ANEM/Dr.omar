@@ -17,9 +17,16 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    // DEBUG: Check values
+    console.log("Attempting login with:", email);
+    // Check if Supabase keys are visible
+    if (!import.meta.env.VITE_SUPABASE_URL) alert("DEBUG: VITE_SUPABASE_URL is MISSING!");
+
     const { error } = await signIn(email, password);
 
     if (error) {
+      console.error("Login Error:", error);
+      alert("Login Failed: " + error.message);
       toast.error(error.message);
     } else {
       toast.success("Welcome back!");
