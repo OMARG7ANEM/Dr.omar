@@ -91,34 +91,53 @@ const AnimatedBackground = () => {
 
                 ctx.save();
 
-                // Glow
-                ctx.shadowBlur = 60;
-                ctx.shadowColor = "rgba(255, 255, 255, 0.5)";
+                if (isDark) {
+                    // Glow
+                    ctx.shadowBlur = 60;
+                    ctx.shadowColor = "rgba(255, 255, 255, 0.5)";
 
-                // Main Moon Body
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = "#F6F1D5";
-                ctx.fill();
+                    // Main Moon Body
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = "#F6F1D5";
+                    ctx.fill();
 
-                // Details/Craters (moving with the moon)
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = "rgba(200, 200, 200, 0.3)";
+                    // Details/Craters (moving with the moon)
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = "rgba(200, 200, 200, 0.3)";
 
-                // Crater 1
-                ctx.beginPath();
-                ctx.arc(this.x - 12, this.y + 6, 10, 0, Math.PI * 2);
-                ctx.fill();
+                    // Crater 1
+                    ctx.beginPath();
+                    ctx.arc(this.x - 12, this.y + 6, 10, 0, Math.PI * 2);
+                    ctx.fill();
 
-                // Crater 2
-                ctx.beginPath();
-                ctx.arc(this.x + 18, this.y - 12, 6, 0, Math.PI * 2);
-                ctx.fill();
+                    // Crater 2
+                    ctx.beginPath();
+                    ctx.arc(this.x + 18, this.y - 12, 6, 0, Math.PI * 2);
+                    ctx.fill();
 
-                // Crater 3
-                ctx.beginPath();
-                ctx.arc(this.x + 6, this.y + 18, 5, 0, Math.PI * 2);
-                ctx.fill();
+                    // Crater 3
+                    ctx.beginPath();
+                    ctx.arc(this.x + 6, this.y + 18, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Sun logic
+                    ctx.shadowBlur = 60;
+                    ctx.shadowColor = "rgba(255, 165, 0, 0.6)";
+
+                    // Main Sun Body
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = "#fbbf24"; // Golden yellow
+                    ctx.fill();
+
+                    // Sun shine glare
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+                    ctx.beginPath();
+                    ctx.arc(this.x - 10, this.y - 10, 15, 0, Math.PI * 2);
+                    ctx.fill();
+                }
 
                 ctx.restore();
             }
@@ -191,8 +210,16 @@ const AnimatedBackground = () => {
                 particles.push(new Particle());
             }
 
-            if (isDark) {
-                moon = new Moon(w * 0.85, h * 0.2);
+            const isMobile = w < 768;
+
+            // Only create Sun/Moon on desktop
+            if (!isMobile) {
+                if (isDark) {
+                    moon = new Moon(w * 0.85, h * 0.2);
+                } else {
+                    moon = new Moon(w * 0.15, h * 0.2);
+                }
+                moon.radius = 50;
             } else {
                 moon = null;
             }
@@ -211,7 +238,7 @@ const AnimatedBackground = () => {
                 ctx.clearRect(0, 0, w, h);
             }
 
-            if (isDark && moon) {
+            if (moon) {
                 moon.update();
                 moon.draw();
             }

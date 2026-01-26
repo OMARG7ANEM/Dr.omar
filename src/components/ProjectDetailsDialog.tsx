@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Download, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 interface ProjectDetailsDialogProps {
     project: {
@@ -66,9 +67,9 @@ const ProjectDetailsDialog = ({ project, children }: ProjectDetailsDialogProps) 
                                 <div className="prose dark:prose-invert max-w-none w-full">
                                     <h3 className="text-xl font-bold mb-4 text-accent">About the Project</h3>
                                     <div className="w-full max-h-[300px] overflow-y-auto border rounded-lg p-4 bg-muted/30 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-muted-foreground/20">
-                                        <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
-                                            {project.description}
-                                        </p>
+                                        <div className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
+                                            <MarkdownRenderer>{project.description}</MarkdownRenderer>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

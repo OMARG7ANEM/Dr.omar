@@ -6,10 +6,15 @@ import Footer from "@/components/Footer";
 
 import PortfolioSection from "@/components/PortfolioSection";
 
+import Navbar from "@/components/Navbar";
+
 const Index = () => {
   return (
     <main className="overflow-hidden">
-      <HeroSection />
+      <Navbar />
+      <section id="home">
+        <HeroSection />
+      </section>
       <AboutSection />
       <SkillsSection />
       <PortfolioSection />

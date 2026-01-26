@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { databases, storage, DB_ID, COLLECTION_CONTACTS, COLLECTION_PROJECTS, BUCKET_IMAGES, client } from "@/integrations/appwrite/client";
@@ -20,6 +20,9 @@ import {
   LayoutGrid,
   Plus,
   Pencil,
+  Bold,
+  Italic,
+  List,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -76,6 +79,42 @@ const Admin = () => {
   // File Inputs state
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [docFile, setDocFile] = useState<File | null>(null);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertFormat = (format: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = projectForm.description;
+    const before = text.substring(0, start);
+    const after = text.substring(end);
+    const selection = text.substring(start, end);
+
+    let newText = "";
+    let newCursorPos = 0;
+
+    if (format === "bold") {
+      newText = `${before}**${selection || "bold"}**${after}`;
+      newCursorPos = selection ? end + 4 : start + 2 + 4; // cursor after word
+    } else if (format === "italic") {
+      newText = `${before}*${selection || "italic"}*${after}`;
+      newCursorPos = selection ? end + 2 : start + 1 + 6;
+    } else if (format === "list") {
+      newText = `${before}\n- ${selection || "item"}${after}`;
+      newCursorPos = selection ? end + 3 : start + 3 + 4;
+    }
+
+    setProjectForm({ ...projectForm, description: newText });
+
+    // Restore focus and cursor (requires timeout to wait for state update)
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
 
   useEffect(() => {
     if (!loading && !user) navigate("/login");
@@ -447,7 +486,12 @@ const Admin = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Description</label>
-                <Textarea required value={projectForm.description} onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })} placeholder="Brief description..." rows={4} />
+                <div className="flex gap-2 mb-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertFormat("bold")}><Bold className="w-4 h-4" /></Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertFormat("italic")}><Italic className="w-4 h-4" /></Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => insertFormat("list")}><List className="w-4 h-4" /></Button>
+                </div>
+                <Textarea ref={textareaRef} required value={projectForm.description} onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })} placeholder="Brief description..." rows={4} />
               </div>
 
               <div className="space-y-2">

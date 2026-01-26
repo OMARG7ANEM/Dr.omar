@@ -3,7 +3,9 @@ import { databases, DB_ID, COLLECTION_PROJECTS } from "@/integrations/appwrite/c
 import { Query } from "appwrite";
 import { Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import ProjectDetailsDialog from "@/components/ProjectDetailsDialog";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 interface Project {
   $id: string; // Appwrite uses $id
@@ -63,15 +65,27 @@ const PortfolioSection = () => {
           </div>
 
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-accent" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-card dark:bg-white/5 rounded-2xl border border-border dark:border-white/10 overflow-hidden shadow-soft flex flex-col h-full w-full">
+                  <Skeleton className="aspect-video w-full rounded-t-2xl" />
+                  <div className="p-6 flex flex-col flex-grow space-y-4">
+                    <Skeleton className="h-8 w-3/4" />
+                    <Skeleton className="h-20 w-full" />
+                    <div className="mt-auto pt-4 flex gap-2">
+                      <Skeleton className="h-9 flex-1" />
+                      <Skeleton className="h-9 flex-1" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : projects && projects.length > 0 ? (
-            <div className="flex flex-wrap justify-center gap-12 max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
               {projects.map((project) => (
                 <ProjectDetailsDialog key={project.id} project={project}>
                   <div
-                    className="group bg-card dark:bg-white/5 rounded-2xl border border-border dark:border-white/10 overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 hover:border-accent/50 dark:hover:border-accent/50 flex flex-col h-full cursor-pointer relative w-full md:w-[calc(50%-2rem)] lg:w-[calc(33.333%-2rem)]"
+                    className="group bg-card dark:bg-white/5 rounded-2xl border border-border dark:border-white/10 overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 hover:border-accent/50 dark:hover:border-accent/50 flex flex-col h-full cursor-pointer relative w-full"
                     style={{ WebkitMaskImage: "-webkit-radial-gradient(white, black)" }}
                   >
                     <div className="aspect-video w-full bg-muted relative overflow-hidden rounded-t-2xl isolate">
@@ -96,9 +110,9 @@ const PortfolioSection = () => {
                       <h3 className="font-display text-2xl font-bold text-foreground mb-4 group-hover:text-accent transition-colors">
                         {project.title}
                       </h3>
-                      <p className="text-muted-foreground mb-6 line-clamp-4 leading-relaxed break-all">
-                        {project.description}
-                      </p>
+                      <div className="line-clamp-4 overflow-hidden mb-6">
+                        <MarkdownRenderer>{project.description}</MarkdownRenderer>
+                      </div>
                       {/* Buttons restored */}
                       <div className="mt-auto pt-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
                         {project.link && (

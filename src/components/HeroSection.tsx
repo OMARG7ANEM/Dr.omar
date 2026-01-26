@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Mail } from "lucide-react";
 import AnimatedBackground from "./AnimatedBackground";
-import { ThemeToggle } from "./ThemeToggle";
+
 
 const HeroSection = () => {
   const scrollToAbout = () => {
@@ -13,12 +13,10 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-hero-gradient overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center bg-hero-gradient overflow-hidden pb-32 md:pb-0">
       <AnimatedBackground />
 
-      <div className="absolute top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
+
 
       {/* Decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
