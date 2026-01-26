@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { databases, DB_ID, COLLECTION_PROJECTS } from "@/integrations/appwrite/client";
+import { Query } from "appwrite";
 import { Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Project {
-  id: string;
+  $id: string; // Appwrite uses $id
   title: string;
   description: string;
   image_url: string | null;
@@ -16,13 +17,28 @@ const PortfolioSection = () => {
   const { data: projects, isLoading } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data as Project[];
+      const response = await databases.listDocuments(
+        DB_ID,
+        COLLECTION_PROJECTS,
+        [Query.orderDesc('$createdAt')]
+      );
+      // Map Appwrite documents to our Project interface
+      const data = response.documents.map(doc => ({
+        id: doc.$id, // Map $id to id for compatibility with existing UI if needed, but UI uses .id logic usually. 
+        // Wait, existing UI uses project.id. Let's map it.
+        ...doc
+      }));
+      return data as unknown as Project[]; // The UI expects `id` but we can just use $id in the UI mapping or map it here.
+      // Let's actually adjust the UI below to look for $id or map it cleanly.
+      // Easiest is to map it:
+      return response.documents.map(doc => ({
+        id: doc.$id,
+        title: doc.title,
+        description: doc.description,
+        image_url: doc.image_url,
+        link: doc.link,
+        file_url: doc.file_url
+      })) as any[];
     },
   });
 

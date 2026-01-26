@@ -19,8 +19,6 @@ const Login = () => {
 
     // DEBUG: Check values
     console.log("Attempting login with:", email);
-    // Check if Supabase keys are visible
-    if (!import.meta.env.VITE_SUPABASE_URL) alert("DEBUG: VITE_SUPABASE_URL is MISSING!");
 
     const { error } = await signIn(email, password);
 

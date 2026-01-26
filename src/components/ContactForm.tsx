@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
+import { databases, DB_ID, COLLECTION_CONTACTS } from "@/integrations/appwrite/client";
+import { ID } from "appwrite";
 import { toast } from "sonner";
 import { Send, CheckCircle, Loader2 } from "lucide-react";
 import { z } from "zod";
@@ -52,20 +53,26 @@ const ContactForm = () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("contact_submissions").insert({
-        name: result.data.name,
-        email: result.data.email,
-        message: result.data.message,
-      });
+      await databases.createDocument(
+        DB_ID,
+        COLLECTION_CONTACTS,
+        ID.unique(),
+        {
+          name: result.data.name,
+          email: result.data.email,
+          message: result.data.message,
+          is_read: false
+        }
+      );
 
-      if (error) throw error;
+
 
       setIsSubmitted(true);
       setFormData({ name: "", email: "", message: "" });
       toast.success("Message sent successfully! I'll get back to you soon.");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting contact form:", error);
-      toast.error("Failed to send message. Please try again.");
+      toast.error("Failed to send message: " + (error.message || "Unknown error"));
     } finally {
       setIsSubmitting(false);
     }

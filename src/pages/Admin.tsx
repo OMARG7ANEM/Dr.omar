@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { databases, storage, DB_ID, COLLECTION_CONTACTS, COLLECTION_PROJECTS, BUCKET_IMAGES, client } from "@/integrations/appwrite/client";
+import { ID, Query } from "appwrite";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   Mail,
-  Calendar,
   User,
   LogOut,
   ArrowLeft,
@@ -20,29 +20,28 @@ import {
   LayoutGrid,
   Plus,
   Pencil,
-  Upload,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ContactSubmission {
-  id: string;
+  $id: string; // Appwrite uses $id
   name: string;
   email: string;
   message: string;
   is_read: boolean;
-  created_at: string;
+  $createdAt: string; // Appwrite uses $createdAt
 }
 
 interface Project {
-  id: string;
+  $id: string;
   title: string;
   description: string;
   image_url: string;
   link: string;
   file_url: string;
-  created_at: string;
+  $createdAt: string;
 }
 
 const Admin = () => {
@@ -89,13 +88,13 @@ const Admin = () => {
 
   const fetchSubmissions = async () => {
     try {
-      const { data, error } = await supabase
-        .from("contact_submissions")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setSubmissions(data || []);
+      const response = await databases.listDocuments(
+        DB_ID,
+        COLLECTION_CONTACTS,
+        [Query.orderDesc('$createdAt')]
+      );
+      // Map Appwrite response to our interface (mostly same, just ensuring typing)
+      setSubmissions(response.documents as unknown as ContactSubmission[]);
     } catch (error) {
       console.error("Error fetching submissions:", error);
       toast.error("Failed to load submissions");
@@ -106,13 +105,12 @@ const Admin = () => {
 
   const fetchProjects = async () => {
     try {
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setProjects(data || []);
+      const response = await databases.listDocuments(
+        DB_ID,
+        COLLECTION_PROJECTS,
+        [Query.orderDesc('$createdAt')]
+      );
+      setProjects(response.documents as unknown as Project[]);
     } catch (error) {
       console.error("Error fetching projects:", error);
       toast.error("Failed to load projects");
@@ -123,13 +121,10 @@ const Admin = () => {
 
   const markAsRead = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("contact_submissions")
-        .update({ is_read: true })
-        .eq("id", id);
-      if (error) throw error;
-      setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, is_read: true } : s)));
-      if (selectedSubmission?.id === id) setSelectedSubmission({ ...selectedSubmission, is_read: true });
+      await databases.updateDocument(DB_ID, COLLECTION_CONTACTS, id, { is_read: true });
+
+      setSubmissions((prev) => prev.map((s) => (s.$id === id ? { ...s, is_read: true } : s)));
+      if (selectedSubmission?.$id === id) setSelectedSubmission({ ...selectedSubmission, is_read: true });
     } catch (error) {
       console.error("Error marking as read:", error);
     }
@@ -137,10 +132,9 @@ const Admin = () => {
 
   const deleteSubmission = async (id: string) => {
     try {
-      const { error } = await supabase.from("contact_submissions").delete().eq("id", id);
-      if (error) throw error;
-      setSubmissions((prev) => prev.filter((s) => s.id !== id));
-      if (selectedSubmission?.id === id) setSelectedSubmission(null);
+      await databases.deleteDocument(DB_ID, COLLECTION_CONTACTS, id);
+      setSubmissions((prev) => prev.filter((s) => s.$id !== id));
+      if (selectedSubmission?.$id === id) setSelectedSubmission(null);
       toast.success("Message deleted");
     } catch (error) {
       console.error("Error deleting submission:", error);
@@ -153,19 +147,17 @@ const Admin = () => {
     navigate("/");
   };
 
-  const uploadFile = async (file: File, bucket: 'project-images' | 'project-files') => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, file);
-
-    if (uploadError) throw uploadError;
-
-    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
-    return data.publicUrl;
+  const uploadFileToAppwrite = async (file: File): Promise<string> => {
+    try {
+      const response = await storage.createFile(BUCKET_IMAGES, ID.unique(), file);
+      // Get the View URL
+      // Since Appwrite storage URLs are permissions based, we need to ensure the bucket is "Public" or "Any" has read access.
+      // We can generate a view URL directly.
+      const result = storage.getFileView(BUCKET_IMAGES, response.$id);
+      return result;
+    } catch (error: any) {
+      throw new Error("Upload failed: " + error.message);
+    }
   };
 
   const handleProjectSubmit = async (e: React.FormEvent) => {
@@ -179,38 +171,31 @@ const Admin = () => {
 
       if (imageFile) {
         console.log("Uploading image...");
-        imageUrl = await uploadFile(imageFile, 'project-images');
+        imageUrl = await uploadFileToAppwrite(imageFile);
         console.log("Image uploaded:", imageUrl);
       }
 
       if (docFile) {
         console.log("Uploading document...");
-        fileUrl = await uploadFile(docFile, 'project-files');
+        fileUrl = await uploadFileToAppwrite(docFile);
         console.log("Document uploaded:", fileUrl);
       }
 
       const projectData = {
         title: projectForm.title,
         description: projectForm.description,
-        link: projectForm.link,
-        image_url: imageUrl,
-        file_url: fileUrl,
+        link: projectForm.link || null,
+        image_url: imageUrl || null,
+        file_url: fileUrl || null,
       };
 
       console.log("Saving project data:", projectData);
 
       if (editingProject) {
-        const { error } = await supabase
-          .from("projects")
-          .update(projectData)
-          .eq("id", editingProject.id);
-        if (error) throw error;
+        await databases.updateDocument(DB_ID, COLLECTION_PROJECTS, editingProject.$id, projectData);
         toast.success("Project updated successfully");
       } else {
-        const { error } = await supabase
-          .from("projects")
-          .insert([projectData]);
-        if (error) throw error;
+        await databases.createDocument(DB_ID, COLLECTION_PROJECTS, ID.unique(), projectData);
         toast.success("Project created successfully");
       }
 
@@ -228,9 +213,8 @@ const Admin = () => {
   const deleteProject = async (id: string) => {
     if (!confirm("Are you sure you want to delete this project?")) return;
     try {
-      const { error } = await supabase.from("projects").delete().eq("id", id);
-      if (error) throw error;
-      setProjects((prev) => prev.filter((p) => p.id !== id));
+      await databases.deleteDocument(DB_ID, COLLECTION_PROJECTS, id);
+      setProjects((prev) => prev.filter((p) => p.$id !== id));
       toast.success("Project deleted");
     } catch (error) {
       console.error("Error deleting project:", error);
@@ -289,7 +273,7 @@ const Admin = () => {
     if (selectedIds.size === submissions.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(submissions.map(s => s.id)));
+      setSelectedIds(new Set(submissions.map(s => s.$id)));
     }
   };
 
@@ -308,12 +292,10 @@ const Admin = () => {
     if (!confirm(`Delete ${selectedIds.size} messages?`)) return;
 
     try {
-      const ids = Array.from(selectedIds);
-      const { error } = await supabase.from("contact_submissions").delete().in("id", ids);
+      const promises = Array.from(selectedIds).map(id => databases.deleteDocument(DB_ID, COLLECTION_CONTACTS, id));
+      await Promise.all(promises);
 
-      if (error) throw error;
-
-      setSubmissions(prev => prev.filter(s => !selectedIds.has(s.id)));
+      setSubmissions(prev => prev.filter(s => !selectedIds.has(s.$id)));
       setSelectedIds(new Set());
       setSelectedSubmission(null);
       toast.success("Messages deleted");
@@ -381,12 +363,12 @@ const Admin = () => {
               <div className="grid lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-1 space-y-3">
                   {submissions.map((submission) => (
-                    <button key={submission.id} onClick={() => { setSelectedSubmission(submission); if (!submission.is_read) markAsRead(submission.id); }} className={`w-full text-left p-4 rounded-xl border transition-all relative ${selectedSubmission?.id === submission.id ? "bg-accent/10 border-accent/30" : "bg-card border-border/50 hover:border-accent/20"}`}>
+                    <button key={submission.$id} onClick={() => { setSelectedSubmission(submission); if (!submission.is_read) markAsRead(submission.$id); }} className={`w-full text-left p-4 rounded-xl border transition-all relative ${selectedSubmission?.$id === submission.$id ? "bg-accent/10 border-accent/30" : "bg-card border-border/50 hover:border-accent/20"}`}>
                       <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
-                          checked={selectedIds.has(submission.id)}
-                          onChange={(e) => { e.stopPropagation(); toggleSelect(submission.id, e as any); }}
+                          checked={selectedIds.has(submission.$id)}
+                          onChange={(e) => { e.stopPropagation(); toggleSelect(submission.$id, e as any); }}
                           className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
                         />
                       </div>
@@ -395,7 +377,7 @@ const Admin = () => {
                         <div className="flex-1 min-w-0 pr-6">
                           <div className="flex justify-between gap-2 mb-1"><span className={`font-medium truncate ${!submission.is_read ? "text-foreground" : "text-muted-foreground"}`}>{submission.name}</span></div>
                           <p className="text-sm text-muted-foreground truncate">{submission.message}</p>
-                          <p className="text-xs text-muted-foreground/70 mt-1">{format(new Date(submission.created_at), "MMM d, yyyy")}</p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">{format(new Date(submission.$createdAt), "MMM d, yyyy")}</p>
                         </div>
                       </div>
                     </button>
@@ -409,7 +391,7 @@ const Admin = () => {
                           <h3 className="font-display text-2xl font-bold text-foreground mb-1">{selectedSubmission.name}</h3>
                           <div className="flex gap-4 text-sm text-muted-foreground"><span className="flex items-center gap-1"><Mail className="w-4 h-4" />{selectedSubmission.email}</span></div>
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => deleteSubmission(selectedSubmission.id)} className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                        <Button variant="outline" size="sm" onClick={() => deleteSubmission(selectedSubmission.$id)} className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
                       </div>
                       <div className="prose prose-sm max-w-none"><p className="text-foreground whitespace-pre-wrap leading-relaxed">{selectedSubmission.message}</p></div>
                       <div className="mt-6 pt-6 border-t border-border/50"><Button variant="hero" asChild><a href={`mailto:${selectedSubmission.email}`}><Mail className="w-4 h-4" /> Reply via Email</a></Button></div>
@@ -424,7 +406,7 @@ const Admin = () => {
 
           <TabsContent value="projects">
             <div className="flex justify-between mb-6">
-              <div><h2 className="font-display text-2xl font-bold text-foreground">Projects Portfolio</h2><p className="text-muted-foreground">Manage your featured projects.</p></div>
+              <div><h2 className="font-display text-2xl font-bold text-foreground">Projects Portfolio</h2><p className="text-muted-foreground">Manage your featured projects. Hosted on Appwrite.</p></div>
               <Button onClick={() => openProjectDialog()} className="gap-2"><Plus className="w-4 h-4" /> Add Project</Button>
             </div>
             {isLoadingProjects ? <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div> : projects.length === 0 ? (
@@ -432,7 +414,7 @@ const Admin = () => {
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {projects.map((project) => (
-                  <div key={project.id} className="bg-card rounded-xl border border-border/50 overflow-hidden group flex flex-col h-full">
+                  <div key={project.$id} className="bg-card rounded-xl border border-border/50 overflow-hidden group flex flex-col h-full">
                     <div className="aspect-video w-full bg-muted relative">
                       {project.image_url ? <img src={project.image_url} alt={project.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-muted-foreground/20">{project.title.charAt(0)}</div>}
                     </div>
@@ -441,7 +423,7 @@ const Admin = () => {
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{project.description}</p>
                       <div className="flex gap-2 mt-auto">
                         <Button variant="outline" size="sm" className="flex-1 gap-2" onClick={() => openProjectDialog(project)}><Pencil className="w-3 h-3" /> Edit</Button>
-                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteProject(project.id)}><Trash2 className="w-3 h-3" /></Button>
+                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteProject(project.$id)}><Trash2 className="w-3 h-3" /></Button>
                       </div>
                     </div>
                   </div>
@@ -475,7 +457,10 @@ const Admin = () => {
                   <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} className="cursor-pointer" />
                 </div>
                 {projectForm.image_url && !imageFile && (
-                  <p className="text-xs text-muted-foreground">Current: {projectForm.image_url.split('/').pop()}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <img src={projectForm.image_url} alt="Preview" className="w-10 h-10 object-cover rounded" />
+                    <p className="text-xs text-muted-foreground break-all">{projectForm.image_url}</p>
+                  </div>
                 )}
               </div>
 
@@ -485,7 +470,7 @@ const Admin = () => {
                   <Input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setDocFile(e.target.files?.[0] || null)} className="cursor-pointer" />
                 </div>
                 {projectForm.file_url && !docFile && (
-                  <p className="text-xs text-muted-foreground">Current: {projectForm.file_url.split('/').pop()}</p>
+                  <p className="text-xs text-muted-foreground mt-2">Current File Linked</p>
                 )}
               </div>
 
