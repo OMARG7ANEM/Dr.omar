@@ -41,6 +41,7 @@ interface Project {
   image_url: string;
   link: string;
   file_url: string;
+  image_position: string | null;
   $createdAt: string;
 }
 
@@ -68,6 +69,7 @@ const Admin = () => {
     description: "",
     image_url: "",
     link: "",
+    image_position: "50% 50%",
     file_url: "",
   });
 
@@ -187,6 +189,7 @@ const Admin = () => {
         link: projectForm.link || null,
         image_url: imageUrl || null,
         file_url: fileUrl || null,
+        image_position: projectForm.image_position || "50% 50%",
       };
 
       console.log("Saving project data:", projectData);
@@ -224,7 +227,7 @@ const Admin = () => {
 
   const resetForm = () => {
     setEditingProject(null);
-    setProjectForm({ title: "", description: "", image_url: "", link: "", file_url: "" });
+    setProjectForm({ title: "", description: "", image_url: "", image_position: "50% 50%", link: "", file_url: "" });
     setImageFile(null);
     setDocFile(null);
   };
@@ -237,6 +240,7 @@ const Admin = () => {
         description: project.description,
         image_url: project.image_url || "",
         link: project.link || "",
+        image_position: project.image_position || "50% 50%",
         file_url: project.file_url || "",
       });
     } else {
@@ -307,15 +311,15 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-primary border-b border-border/10 sticky top-0 z-50">
+      <header className="bg-primary dark:bg-card border-b border-border/10 dark:border-white/10 sticky top-0 z-50 transition-colors">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link to="/" className="text-accent/80 hover:text-accent transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
-            <h1 className="font-display text-xl font-bold text-primary-foreground">Admin Dashboard</h1>
+            <Link to="/" className="text-primary-foreground/80 hover:text-primary-foreground dark:text-foreground/80 dark:hover:text-foreground transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
+            <h1 className="font-display text-xl font-bold text-primary-foreground dark:text-foreground">Admin Dashboard</h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-primary-foreground/70 hidden sm:inline">{user?.email}</span>
-            <Button variant="heroOutline" size="sm" onClick={handleSignOut}>
+            <span className="text-sm text-primary-foreground/70 dark:text-muted-foreground hidden sm:inline">{user?.email}</span>
+            <Button variant="heroOutline" size="sm" onClick={handleSignOut} className="dark:border-white/20 dark:text-foreground dark:hover:bg-white/10 dark:hover:text-white">
               <LogOut className="w-4 h-4" />
               <span className="ml-2 hidden sm:inline">Sign Out</span>
             </Button>
@@ -434,7 +438,7 @@ const Admin = () => {
         </Tabs>
 
         <Dialog open={isProjectDialogOpen} onOpenChange={setIsProjectDialogOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle></DialogHeader>
             <form onSubmit={handleProjectSubmit} className="space-y-4 mt-4">
               <div className="space-y-2">
@@ -463,6 +467,63 @@ const Admin = () => {
                   </div>
                 )}
               </div>
+
+              <div className="space-y-2">
+                <div className="space-y-4">
+                  <label className="text-sm font-medium">Image Focus Position (Review in Preview below)</label>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Horizontal (X): {projectForm.image_position?.split(' ')[0] || '50%'}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-accent"
+                      value={parseInt(projectForm.image_position?.split(' ')[0] || '50')}
+                      onChange={(e) => {
+                        const x = e.target.value;
+                        const y = projectForm.image_position?.split(' ')[1] || '50%';
+                        setProjectForm({ ...projectForm, image_position: `${x}% ${y}` });
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Vertical (Y): {projectForm.image_position?.split(' ')[1] || '50%'}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-accent"
+                      value={parseInt(projectForm.image_position?.split(' ')[1] || '50')}
+                      onChange={(e) => {
+                        const y = e.target.value;
+                        const x = projectForm.image_position?.split(' ')[0] || '50%';
+                        setProjectForm({ ...projectForm, image_position: `${x} ${y}%` });
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview Section */}
+              {projectForm.image_url && (
+                <div className="space-y-2 border rounded-lg p-4 bg-muted/20">
+                  <label className="text-sm font-medium">Live Preview (Card View)</label>
+                  <div className="aspect-video w-full bg-muted relative overflow-hidden rounded-t-2xl isolate border border-border">
+                    <img
+                      src={projectForm.image_url}
+                      alt="Preview"
+                      className="w-full h-full object-cover transition-transform duration-500"
+                      style={{ objectPosition: projectForm.image_position }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project File (PDF/Doc)</label>

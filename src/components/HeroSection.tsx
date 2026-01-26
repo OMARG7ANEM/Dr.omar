@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Mail } from "lucide-react";
-import { Link } from "react-router-dom";
+import AnimatedBackground from "./AnimatedBackground";
+import { ThemeToggle } from "./ThemeToggle";
 
 const HeroSection = () => {
   const scrollToAbout = () => {
@@ -13,6 +14,12 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-hero-gradient overflow-hidden">
+      <AnimatedBackground />
+
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+
       {/* Decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-20 left-10 w-72 h-72 bg-accent/5 rounded-full blur-3xl animate-pulse-slow" />
@@ -29,11 +36,11 @@ const HeroSection = () => {
           </span>
         </div>
 
-        <h1 className="animate-fade-up-delay font-display text-5xl md:text-7xl lg:text-8xl font-bold text-primary-foreground mb-6 leading-tight">
+        <h1 className="animate-fade-up-delay font-display text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 leading-tight">
           Dr. Omar <span className="text-gradient">Ghanem</span>
         </h1>
 
-        <p className="animate-fade-up-delay-2 max-w-2xl mx-auto text-lg md:text-xl text-primary-foreground/70 mb-10 leading-relaxed font-light">
+        <p className="animate-fade-up-delay-2 max-w-2xl mx-auto text-lg md:text-xl text-white/80 mb-10 leading-relaxed font-light">
           Transforming research data into published success. 5+ years helping researchers
           and PhD students achieve their publication goals in prestigious Q1 journals.
         </p>

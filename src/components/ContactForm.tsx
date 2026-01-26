@@ -101,7 +101,7 @@ const ContactForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-card rounded-2xl shadow-soft border border-border/50">
+    <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-card dark:bg-white/5 rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 border border-border dark:border-white/10 hover:border-accent/50 dark:hover:border-accent/50">
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
           Full Name

@@ -53,7 +53,7 @@ const SkillsSection = () => {
             {tools.map((tool, index) => (
               <div
                 key={tool.name}
-                className="group relative p-8 bg-card rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-2 border border-border/50 overflow-hidden"
+                className="group relative p-8 bg-card dark:bg-white/5 rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-2 border border-border dark:border-white/10 hover:border-accent/50 dark:hover:border-accent/50 overflow-hidden"
               >
                 <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-accent/10 transition-colors" />
                 <div className="relative">

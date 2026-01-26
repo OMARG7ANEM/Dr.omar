@@ -16,7 +16,7 @@ const ContactSection = () => {
               Ready to <span className="text-gradient">Elevate</span> Your Research?
             </h2>
             <p className="max-w-2xl mx-auto text-lg text-muted-foreground">
-              Let's discuss how I can help you achieve your publication goals 
+              Let's discuss how I can help you achieve your publication goals
               and take your research to the next level.
             </p>
           </div>
@@ -27,20 +27,20 @@ const ContactSection = () => {
 
             {/* Contact info */}
             <div className="space-y-8">
-              <div className="p-8 bg-hero-gradient rounded-2xl text-primary-foreground">
+              <div className="p-8 bg-hero-gradient rounded-2xl text-white shadow-lg">
                 <h3 className="font-display text-2xl font-bold mb-4">
                   Let's Connect
                 </h3>
-                <p className="text-primary-foreground/80 mb-6 leading-relaxed">
-                  I'm always excited to discuss new research projects and help 
-                  fellow academics achieve their publication goals. Whether you're 
-                  working on a systematic review, need statistical consultation, 
+                <p className="text-white/90 mb-6 leading-relaxed">
+                  I'm always excited to discuss new research projects and help
+                  fellow academics achieve their publication goals. Whether you're
+                  working on a systematic review, need statistical consultation,
                   or want guidance on your PhD research, I'm here to help.
                 </p>
-                
+
                 <div className="flex items-center gap-2 mb-4">
                   <Send className="w-5 h-5 text-accent" />
-                  <span className="text-sm text-primary-foreground/80">
+                  <span className="text-sm text-white/90">
                     Usually responds within 24 hours
                   </span>
                 </div>
@@ -54,7 +54,7 @@ const ContactSection = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-6 bg-card rounded-xl border border-border/50 text-center">
+                <div className="p-6 bg-card dark:bg-white/5 rounded-xl border border-border dark:border-white/10 hover:border-accent/30 transition-colors text-center shadow-sm">
                   <div className="text-3xl font-display font-bold text-foreground mb-1">
                     24h
                   </div>
@@ -62,7 +62,7 @@ const ContactSection = () => {
                     Response Time
                   </div>
                 </div>
-                <div className="p-6 bg-card rounded-xl border border-border/50 text-center">
+                <div className="p-6 bg-card dark:bg-white/5 rounded-xl border border-border dark:border-white/10 hover:border-accent/30 transition-colors text-center shadow-sm">
                   <div className="text-3xl font-display font-bold text-foreground mb-1">
                     100%
                   </div>
