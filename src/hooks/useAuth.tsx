@@ -22,9 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const currentUser = await account.get();
       setUser(currentUser);
-      // Simple admin check: Check if email matches the specific admin email
-      // In Appwrite, we could also check 'labels' or 'teams', but for now hardcode
-      setIsAdmin(currentUser.email === 'omac2461@gmail.com');
+      // Check if user has 'admin' label
+      // Labels are managed in Appwrite Console: Auth → Users → [Select User] → Add Label: 'admin'
+      setIsAdmin(currentUser.labels?.includes('admin') || false);
     } catch (error) {
       setUser(null);
       setIsAdmin(false);
