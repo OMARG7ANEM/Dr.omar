@@ -56,14 +56,14 @@ const Navbar = () => {
     return (
         <nav
             className={cn(
-                "fixed top-0 left-0 right-0 z-40 transition-all duration-300 px-6 py-4",
+                "fixed top-0 left-0 right-0 z-40 transition-all duration-300 px-4 py-3 md:px-6 md:py-4",
                 scrolled ? "bg-background/80 backdrop-blur-md border-b border-border/50 shadow-sm" : "bg-transparent"
             )}
         >
             <div className="w-full flex items-center justify-between">
                 <a
                     href="#home"
-                    className="text-xl font-display font-bold text-accent dark:text-foreground transition-colors"
+                    className="text-lg md:text-xl font-display font-bold text-accent dark:text-foreground transition-colors"
                     onClick={(e) => scrollToSection(e, "#home")}
                 >
                     Dr. Ghanem
@@ -95,12 +95,12 @@ const Navbar = () => {
                 </div>
 
                 {/* Mobile menu could go here, for now keeping it simple for desktop */}
-                <div className="md:hidden flex items-center gap-4">
+                <div className="md:hidden flex items-center gap-2">
                     <ThemeToggle />
                     <Sheet>
                         <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="shrink-0">
-                                <Menu className="h-6 w-6" />
+                            <Button variant="ghost" size="icon" className="shrink-0 text-accent bg-accent/10 hover:bg-accent/20 border border-accent/30">
+                                <Menu className="h-5 w-5" />
                                 <span className="sr-only">Toggle menu</span>
                             </Button>
                         </SheetTrigger>
@@ -112,10 +112,6 @@ const Navbar = () => {
                                         href={item.href}
                                         onClick={(e) => {
                                             scrollToSection(e, item.href);
-                                            // Close sheet would be nice here but Sheet primitive handles it if we use Close or state.
-                                            // For simplicity, just letting it be or using a ref would be better if we had time.
-                                            // Let's rely on standard link behavior + Radix usually closes on outside click.
-                                            // Actually, to close on click we need state.
                                         }}
                                         className={cn(
                                             "text-lg font-medium transition-colors hover:text-accent",

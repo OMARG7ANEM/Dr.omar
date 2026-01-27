@@ -27,7 +27,7 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-6 text-center">
+      <div className="relative z-10 container mx-auto px-6 text-center mt-16 md:mt-8">
         <div className="animate-fade-up">
           <span className="inline-block px-4 py-2 mb-6 text-sm font-medium tracking-wider text-accent/90 uppercase border border-accent/30 rounded-full">
             Professional Statistician & Data Analyst
@@ -55,10 +55,10 @@ const HeroSection = () => {
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-float">
+      <div className="absolute bottom-10 left-0 right-0 flex justify-center animate-float">
         <button
           onClick={scrollToAbout}
-          className="p-3 rounded-full border border-accent/30 text-accent/70 hover:text-accent hover:border-accent transition-colors"
+          className="w-12 h-12 rounded-full border border-accent/30 text-accent/70 hover:text-accent hover:border-accent transition-colors flex items-center justify-center bg-background/5 backdrop-blur-sm"
         >
           <ArrowDown className="w-5 h-5" />
         </button>
