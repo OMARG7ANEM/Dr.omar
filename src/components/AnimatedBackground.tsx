@@ -288,15 +288,42 @@ const AnimatedBackground = () => {
             animationFrameId = requestAnimationFrame(animate);
         };
 
+        let previousWidth = 0;
+        let previousHeight = 0;
+
         const handleResize = () => {
-            if (canvas.parentElement) {
-                w = canvas.width = canvas.parentElement.clientWidth;
-                h = canvas.height = canvas.parentElement.clientHeight;
-            } else {
-                w = canvas.width = window.innerWidth;
-                h = canvas.height = window.innerHeight;
+            const newWidth = canvas.parentElement
+                ? canvas.parentElement.clientWidth
+                : window.innerWidth;
+            const newHeight = canvas.parentElement
+                ? canvas.parentElement.clientHeight
+                : window.innerHeight;
+
+            // Calculate the change
+            const widthChange = Math.abs(newWidth - previousWidth);
+            const heightChange = Math.abs(newHeight - previousHeight);
+
+            // Update canvas size
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            w = newWidth;
+            h = newHeight;
+
+            // Only reinitialize particles if:
+            // - Width changed (orientation/window resize)
+            // - Height changed significantly (more than 100px, not just address bar)
+            // - First initialization
+            const shouldReinitialize =
+                previousWidth === 0 ||
+                widthChange > 0 ||
+                heightChange > 100;
+
+            if (shouldReinitialize) {
+                init();
             }
-            init();
+
+            previousWidth = newWidth;
+            previousHeight = newHeight;
         };
 
         const handleMouseMove = (e: MouseEvent) => {
