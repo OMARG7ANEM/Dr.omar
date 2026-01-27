@@ -18,6 +18,7 @@ const AnimatedBackground = () => {
         let animationFrameId: number;
         let w = 0;
         let h = 0;
+        let isMobile = false;
 
         // Check effective theme (handle system preference)
         const isDark =
@@ -27,8 +28,8 @@ const AnimatedBackground = () => {
         // Configuration based on theme
         const particleColor = isDark ? 'rgba(255, 255, 255, ' : 'rgba(255, 255, 255, ';
         const lineColor = isDark ? 'rgba(255, 255, 255, ' : 'rgba(212, 175, 55, ';
-        const connectionDistance = 150;
-        const mouseDistance = 250;
+        const getConnectionDistance = () => isMobile ? 80 : 150;
+        const getMouseDistance = () => isMobile ? 120 : 250;
 
         class Moon {
             x: number;
@@ -154,9 +155,11 @@ const AnimatedBackground = () => {
             constructor() {
                 this.x = Math.random() * w;
                 this.y = Math.random() * h;
-                this.vx = (Math.random() - 0.5) * (isDark ? 0.3 : 0.5);
-                this.vy = (Math.random() - 0.5) * (isDark ? 0.3 : 0.5);
-                this.size = Math.random() * 2 + (isDark ? 0.5 : 1);
+                const velocityMultiplier = isMobile ? 0.3 : 1;
+                this.vx = (Math.random() - 0.5) * (isDark ? 0.3 : 0.5) * velocityMultiplier;
+                this.vy = (Math.random() - 0.5) * (isDark ? 0.3 : 0.5) * velocityMultiplier;
+                const sizeMultiplier = isMobile ? 0.5 : 1;
+                this.size = (Math.random() * 2 + (isDark ? 0.5 : 1)) * sizeMultiplier;
                 this.opacity = Math.random() * 0.5 + 0.3;
             }
 
@@ -172,10 +175,10 @@ const AnimatedBackground = () => {
                 const dy = mouseRef.current.y - this.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                if (distance < mouseDistance) {
+                if (distance < getMouseDistance()) {
                     const forceDirectionX = dx / distance;
                     const forceDirectionY = dy / distance;
-                    const maxDistance = mouseDistance;
+                    const maxDistance = getMouseDistance();
                     const force = (maxDistance - distance) / maxDistance;
                     const directionX = forceDirectionX * force * 2;
                     const directionY = forceDirectionY * force * 2;
@@ -205,12 +208,14 @@ const AnimatedBackground = () => {
 
         const init = () => {
             particles = [];
-            const particleCount = Math.min(Math.floor((w * h) / 10000), 80);
+            isMobile = w < 768;
+            const particleCount = isMobile
+                ? Math.min(Math.floor((w * h) / 15000), 40)
+                : Math.min(Math.floor((w * h) / 10000), 80);
             for (let i = 0; i < particleCount; i++) {
                 particles.push(new Particle());
             }
 
-            const isMobile = w < 768;
 
             // Only create Sun/Moon on desktop
             if (!isMobile) {
@@ -252,12 +257,12 @@ const AnimatedBackground = () => {
                     const dy = particles[i].y - particles[j].y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
-                    if (distance < connectionDistance) {
+                    if (distance < getConnectionDistance()) {
                         ctx.beginPath();
                         ctx.strokeStyle = lineColor + (
-                            (isDark ? 0.2 : 0.15) * (1 - distance / connectionDistance)
+                            (isDark ? 0.2 : 0.15) * (1 - distance / getConnectionDistance())
                         ) + ')';
-                        ctx.lineWidth = 1;
+                        ctx.lineWidth = isMobile ? 0.5 : 1;
                         ctx.moveTo(particles[i].x, particles[i].y);
                         ctx.lineTo(particles[j].x, particles[j].y);
                         ctx.stroke();
@@ -268,12 +273,12 @@ const AnimatedBackground = () => {
                 const dy = mouseRef.current.y - particles[i].y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                if (distance < mouseDistance) {
+                if (distance < getMouseDistance()) {
                     ctx.beginPath();
                     ctx.strokeStyle = lineColor + (
-                        0.2 * (1 - distance / mouseDistance)
+                        0.2 * (1 - distance / getMouseDistance())
                     ) + ')';
-                    ctx.lineWidth = 1;
+                    ctx.lineWidth = isMobile ? 0.5 : 1;
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(mouseRef.current.x, mouseRef.current.y);
                     ctx.stroke();
