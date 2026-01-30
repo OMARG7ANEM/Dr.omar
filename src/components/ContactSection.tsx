@@ -1,5 +1,5 @@
 import ContactForm from "@/components/ContactForm";
-import { Linkedin, Send } from "lucide-react";
+import { ExternalLink, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ContactSection = () => {
@@ -21,13 +21,13 @@ const ContactSection = () => {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-start">
+          <div className="grid lg:grid-cols-2 gap-12 items-stretch">
             {/* Contact form */}
             <ContactForm />
 
             {/* Contact info */}
             <div className="space-y-8">
-              <div className="p-8 bg-hero-gradient rounded-2xl text-white shadow-lg">
+              <div className="p-8 bg-[#1DBF73] rounded-2xl text-white shadow-lg">
                 <h3 className="font-display text-2xl font-bold mb-4">
                   Let's Connect
                 </h3>
@@ -45,10 +45,10 @@ const ContactSection = () => {
                   </span>
                 </div>
 
-                <Button variant="heroOutline" size="lg" asChild className="w-full">
-                  <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
-                    <Linkedin className="w-5 h-5" />
-                    Connect on LinkedIn
+                <Button size="lg" asChild className="w-full bg-white text-[#1DBF73] hover:bg-white/90 font-bold border-none shadow-md hover:shadow-elevated hover:scale-105 active:scale-100">
+                  <a href="https://www.fiverr.com/s/995Loz0" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-5 h-5" />
+                    Check out my Fiverr Gig
                   </a>
                 </Button>
               </div>

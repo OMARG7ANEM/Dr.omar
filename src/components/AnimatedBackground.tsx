@@ -292,6 +292,9 @@ const AnimatedBackground = () => {
         let previousHeight = 0;
 
         const handleResize = () => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+
             const newWidth = canvas.parentElement
                 ? canvas.parentElement.clientWidth
                 : window.innerWidth;
@@ -299,13 +302,22 @@ const AnimatedBackground = () => {
                 ? canvas.parentElement.clientHeight
                 : window.innerHeight;
 
+            const dpr = window.devicePixelRatio || 1;
+
             // Calculate the change
             const widthChange = Math.abs(newWidth - previousWidth);
             const heightChange = Math.abs(newHeight - previousHeight);
 
-            // Update canvas size
-            canvas.width = newWidth;
-            canvas.height = newHeight;
+            // Update canvas size with DPI scaling
+            canvas.width = newWidth * dpr;
+            canvas.height = newHeight * dpr;
+
+            // Scale context to match DPI
+            if (ctx) {
+                ctx.scale(dpr, dpr);
+            }
+
+            // Internal width/height remains logical pixels
             w = newWidth;
             h = newHeight;
 

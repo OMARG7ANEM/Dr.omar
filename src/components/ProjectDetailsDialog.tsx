@@ -1,103 +1,153 @@
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
-    DialogTitle,
     DialogTrigger,
     DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Download, X } from "lucide-react";
+import { ExternalLink, Download, X, ArrowLeft, ArrowRight, User } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 interface ProjectDetailsDialogProps {
     project: {
-        id: string; // or $id depending on usage, keeping it generic since we map it in PortfolioSection
+        id: string; // or $id
         title: string;
         description: string;
         image_url: string | null;
         link: string | null;
         file_url: string | null;
         image_position: string | null;
+        price_range?: string; // Optional metadata
+        duration?: string;   // Optional metadata
+        industry?: string;   // Optional metadata
     };
     children: React.ReactNode;
 }
 
 const ProjectDetailsDialog = ({ project, children }: ProjectDetailsDialogProps) => {
+    // Parse multiple images: Assuming image_url can be comma-separated or just one
+    const images = project.image_url ? project.image_url.split(',').map(url => url.trim()) : [];
+
     return (
         <Dialog>
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0 overflow-hidden bg-card/95 dark:bg-slate-950/95 backdrop-blur-xl border-border dark:border-white/10 flex flex-col [&>button]:hidden">
-                <div className="relative h-full flex flex-col">
-                    {/* Close button is built-in to DialogContent usually, but we can style it ourselves if needed or rely on default */}
-                    <DialogClose className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors border border-white/20">
-                        <X className="w-5 h-5" />
-                    </DialogClose>
+            <DialogContent className="max-w-5xl w-[95vw] h-[90vh] p-0 overflow-hidden bg-background border border-border/50 shadow-2xl flex flex-col gap-0 sm:rounded-xl">
 
-                    {/* Image Banner */}
-                    <div className="w-full h-[40%] min-h-[250px] bg-muted relative overflow-hidden shrink-0">
-                        {project.image_url ? (
-                            <img
-                                src={project.image_url}
-                                alt={project.title}
-                                className="w-full h-full object-cover"
-                                style={{ objectPosition: project.image_position || 'center' }}
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-accent/5 text-accent/20 text-6xl font-bold">
-                                {project.title.charAt(0)}
-                            </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-
-                        <div className="absolute bottom-0 left-0 p-6 md:p-8 w-full">
-                            <DialogTitle className="font-display text-3xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-                                {project.title}
-                            </DialogTitle>
+                {/* Header: Author + Nav + Close */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center overflow-hidden border border-accent/20">
+                            {/* Placeholder avatar or initial */}
+                            <User className="w-5 h-5 text-accent" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-xs text-muted-foreground uppercase tracking-wider">Made by</span>
+                            <span className="text-sm font-bold text-foreground">Omar Ghanem</span>
                         </div>
                     </div>
 
-                    {/* Content Body */}
-                    <div className="flex-1 flex flex-col min-h-0 bg-background/50">
-                        <ScrollArea className="flex-1 w-full">
-                            <div className="p-6 md:p-8 space-y-6">
-                                <div className="prose dark:prose-invert max-w-none w-full">
-                                    <h3 className="text-xl font-bold mb-4 text-accent">About the Project</h3>
-                                    <div className="w-full max-h-[300px] overflow-y-auto border rounded-lg p-4 bg-muted/30 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-muted-foreground/20">
-                                        <div className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
-                                            <MarkdownRenderer>{project.description}</MarkdownRenderer>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </ScrollArea>
-
-                        {/* Fixed Footer Actions */}
-                        <div className="p-6 md:p-8 border-t border-border/50 bg-background/80 backdrop-blur-sm mt-auto">
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                {project.link && (
-                                    <Button size="lg" className="flex-1 gap-2" asChild>
-                                        <a href={project.link} target="_blank" rel="noopener noreferrer">
-                                            <ExternalLink className="w-5 h-5" />
-                                            View Live Project
-                                        </a>
-                                    </Button>
-                                )}
-                                {project.file_url && (
-                                    <Button size="lg" variant="outline" className="flex-1 gap-2 border-accent/20 hover:bg-accent/10 hover:text-accent" asChild>
-                                        <a href={project.file_url} target="_blank" rel="noopener noreferrer" download>
-                                            <Download className="w-5 h-5" />
-                                            Download Files
-                                        </a>
-                                    </Button>
-                                )}
-                            </div>
+                    <div className="flex items-center gap-2">
+                        {/* Navigation placeholders (can be hooked up later) */}
+                        <div className="hidden sm:flex items-center gap-1 bg-muted/50 rounded-full px-3 py-1 text-xs text-muted-foreground border border-border/50">
+                            1 of 1 {/* Dynamic in future */}
                         </div>
+
+                        <div className="flex gap-1 ml-4">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" disabled>
+                                <ArrowLeft className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" disabled>
+                                <ArrowRight className="w-4 h-4" />
+                            </Button>
+                        </div>
+
+                        <DialogClose className="ml-2 p-2 rounded-full hover:bg-muted transition-colors">
+                            <X className="w-5 h-5 text-muted-foreground" />
+                        </DialogClose>
                     </div>
                 </div>
+
+                {/* Main Scrollable Content */}
+                <ScrollArea className="flex-1 w-full bg-background">
+                    <div className="max-w-4xl mx-auto p-6 md:p-12 space-y-12">
+
+                        {/* Project Header: Date, Title, Links */}
+                        <div className="space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-2">From: {new Date().getFullYear()} {/* Or date if available */}</p>
+                                    <h1 className="font-display text-3xl md:text-5xl font-bold text-foreground leading-tight">
+                                        {project.title}
+                                    </h1>
+                                </div>
+
+                                {/* Action Buttons (Top Right on desktop) */}
+                                <div className="flex gap-2 shrink-0">
+                                    {project.link && (
+                                        <Button size="sm" className="gap-2" asChild>
+                                            <a href={project.link} target="_blank" rel="noopener noreferrer">
+                                                <ExternalLink className="w-4 h-4" />
+                                                Live Site
+                                            </a>
+                                        </Button>
+                                    )}
+                                    {project.file_url && (
+                                        <Button size="sm" variant="outline" className="gap-2" asChild>
+                                            <a href={project.file_url} target="_blank" rel="noopener noreferrer" download>
+                                                <Download className="w-4 h-4" />
+                                                Files
+                                            </a>
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        <div className="prose dark:prose-invert max-w-none text-lg text-muted-foreground leading-relaxed">
+                            <MarkdownRenderer>{project.description}</MarkdownRenderer>
+                        </div>
+
+                        {/* Metadata Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 p-8 bg-card/30 rounded-xl border border-border/50">
+                            <div>
+                                <h4 className="text-sm font-medium text-muted-foreground mb-1">Price Range</h4>
+                                <p className="text-lg font-bold text-foreground">{project.price_range || "$50-$100"}</p>
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-medium text-muted-foreground mb-1">Project Duration</h4>
+                                <p className="text-lg font-bold text-foreground">{project.duration || "1-3 months"}</p>
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-medium text-muted-foreground mb-1">Industry</h4>
+                                <p className="text-lg font-bold text-foreground">{project.industry || "Research & Analysis"}</p>
+                            </div>
+                        </div>
+
+                        {/* Images Section */}
+                        {images.length > 0 && (
+                            <div className="space-y-8 mt-12">
+                                {images.map((imgUrl, index) => (
+                                    <div key={index} className="w-full relative">
+                                        <img
+                                            src={imgUrl}
+                                            alt={`${project.title} - Image ${index + 1}`}
+                                            className="w-full h-auto rounded-lg shadow-lg border border-border/20"
+                                        />
+                                        {/* Thin line separator, only if not last image */}
+                                        {index < images.length - 1 && (
+                                            <div className="mt-8 border-b border-border/20 w-full" />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </ScrollArea>
+
             </DialogContent>
         </Dialog>
     );

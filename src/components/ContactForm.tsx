@@ -101,7 +101,7 @@ const ContactForm = () => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-card dark:bg-white/5 rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 border border-border dark:border-white/10 hover:border-accent/50 dark:hover:border-accent/50">
+    <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-card dark:bg-white/5 rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 border border-border dark:border-white/10 hover:border-accent/50 dark:hover:border-accent/50 h-full flex flex-col">
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
           Full Name
@@ -113,6 +113,7 @@ const ContactForm = () => {
           value={formData.name}
           onChange={handleChange}
           placeholder="Your name"
+          autoComplete="name"
           className={errors.name ? "border-destructive" : ""}
         />
         {errors.name && (
@@ -131,6 +132,7 @@ const ContactForm = () => {
           value={formData.email}
           onChange={handleChange}
           placeholder="your.email@example.com"
+          autoComplete="email"
           className={errors.email ? "border-destructive" : ""}
         />
         {errors.email && (
@@ -138,7 +140,7 @@ const ContactForm = () => {
         )}
       </div>
 
-      <div>
+      <div className="flex-1 flex flex-col">
         <label htmlFor="message" className="block text-sm font-medium text-foreground mb-2">
           Message
         </label>
@@ -148,8 +150,8 @@ const ContactForm = () => {
           value={formData.message}
           onChange={handleChange}
           placeholder="Tell me about your research project..."
-          rows={5}
-          className={errors.message ? "border-destructive" : ""}
+          autoComplete="off"
+          className={`flex-1 min-h-[120px] resize-none ${errors.message ? "border-destructive" : ""}`}
         />
         {errors.message && (
           <p className="mt-1 text-sm text-destructive">{errors.message}</p>

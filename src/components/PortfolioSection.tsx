@@ -15,6 +15,9 @@ interface Project {
   link: string | null;
   file_url: string | null;
   image_position: string | null;
+  price_range?: string;
+  duration?: string;
+  industry?: string;
 }
 
 const PortfolioSection = () => {
@@ -42,7 +45,10 @@ const PortfolioSection = () => {
         image_url: doc.image_url,
         link: doc.link,
         file_url: doc.file_url,
-        image_position: doc.image_position
+        image_position: doc.image_position,
+        price_range: doc.price_range,
+        duration: doc.duration,
+        industry: doc.industry
       })) as any[];
     },
   });
@@ -85,25 +91,26 @@ const PortfolioSection = () => {
               {projects.map((project) => (
                 <ProjectDetailsDialog key={project.id} project={project}>
                   <div
-                    className="group bg-card dark:bg-white/5 rounded-2xl border border-border dark:border-white/10 overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 hover:border-accent/50 dark:hover:border-accent/50 flex flex-col h-full cursor-pointer relative w-full"
-                    style={{ WebkitMaskImage: "-webkit-radial-gradient(white, black)" }}
+                    className="group bg-card/50 dark:bg-white/5 backdrop-blur-sm rounded-2xl border border-border/50 overflow-hidden shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-2 hover:border-accent/50 flex flex-col h-full cursor-pointer relative w-full"
                   >
                     <div className="aspect-video w-full bg-muted relative overflow-hidden rounded-t-2xl isolate">
                       {project.image_url ? (
                         <img
-                          src={project.image_url}
+                          src={project.image_url.split(',')[0].trim()}
                           alt={project.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 will-change-transform"
+                          className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105 group-hover:blur-[2px] will-change-transform"
                           style={{ objectPosition: project.image_position || 'center' }}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-accent/5 text-accent/20 text-4xl font-bold">
+                        <div className="w-full h-full flex items-center justify-center bg-accent/5 text-accent/20 text-4xl font-bold transition-all duration-500 group-hover:blur-[2px]">
                           {project.title.charAt(0)}
                         </div>
                       )}
                       {/* Overlay hint */}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="text-white font-medium px-4 py-2 border border-white/30 rounded-full backdrop-blur-sm">View Details</span>
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-in-out flex items-center justify-center">
+                        <span className="text-white font-medium px-6 py-2.5 border border-white/20 rounded-full bg-black/50 hover:bg-black/70 shadow-xl transform scale-90 group-hover:scale-100 transition-all duration-300">
+                          View Details
+                        </span>
                       </div>
                     </div>
                     <div className="p-6 flex flex-col flex-grow">

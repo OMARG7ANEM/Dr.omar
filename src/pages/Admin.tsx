@@ -12,6 +12,7 @@ import {
   User,
   LogOut,
   ArrowLeft,
+  ArrowRight,
   Inbox,
   CheckCircle,
   Circle,
@@ -45,6 +46,9 @@ interface Project {
   link: string;
   file_url: string;
   image_position: string | null;
+  price_range?: string;
+  duration?: string;
+  industry?: string;
   $createdAt: string;
 }
 
@@ -61,6 +65,15 @@ const Admin = () => {
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
+  // New state for handling multiple images order and removal
+  interface ProjectImage {
+    id: string;
+    file?: File;
+    url?: string;
+    preview: string;
+  }
+  const [projectImages, setProjectImages] = useState<ProjectImage[]>([]);
+
   // Loading states
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
@@ -74,10 +87,13 @@ const Admin = () => {
     link: "",
     image_position: "50% 50%",
     file_url: "",
+    price_range: "",
+    duration: "",
+    industry: ""
   });
 
   // File Inputs state
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  // imageFiles replaced by projectImages
   const [docFile, setDocFile] = useState<File | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -207,15 +223,27 @@ const Admin = () => {
     console.log("Starting upload process...");
 
     try {
-      let imageUrl = projectForm.image_url;
-      let fileUrl = projectForm.file_url;
+      const finalImageUrls: string[] = [];
 
-      if (imageFile) {
-        console.log("Uploading image...");
-        imageUrl = await uploadFileToAppwrite(imageFile);
-        console.log("Image uploaded:", imageUrl);
+      // Process each image in order
+      for (const img of projectImages) {
+        if (img.file) {
+          console.log("Uploading new image...");
+          try {
+            const url = await uploadFileToAppwrite(img.file);
+            finalImageUrls.push(url);
+          } catch (err) {
+            console.error("Failed to upload image:", err);
+            toast.error("Failed to upload one of the images");
+          }
+        } else if (img.url) {
+          finalImageUrls.push(img.url);
+        }
       }
 
+      const combinedImageUrl = finalImageUrls.join(',');
+
+      let fileUrl = projectForm.file_url;
       if (docFile) {
         console.log("Uploading document...");
         fileUrl = await uploadFileToAppwrite(docFile);
@@ -226,9 +254,12 @@ const Admin = () => {
         title: projectForm.title,
         description: projectForm.description,
         link: projectForm.link || null,
-        image_url: imageUrl || null,
+        image_url: combinedImageUrl || null,
         file_url: fileUrl || null,
         image_position: projectForm.image_position || "50% 50%",
+        price_range: projectForm.price_range || null,
+        duration: projectForm.duration || null,
+        industry: projectForm.industry || null
       };
 
       console.log("Saving project data:", projectData);
@@ -266,8 +297,18 @@ const Admin = () => {
 
   const resetForm = () => {
     setEditingProject(null);
-    setProjectForm({ title: "", description: "", image_url: "", image_position: "50% 50%", link: "", file_url: "" });
-    setImageFile(null);
+    setProjectForm({
+      title: "",
+      description: "",
+      image_url: "",
+      image_position: "50% 50%",
+      link: "",
+      file_url: "",
+      price_range: "",
+      duration: "",
+      industry: ""
+    });
+    setProjectImages([]);
     setDocFile(null);
   };
 
@@ -281,11 +322,51 @@ const Admin = () => {
         link: project.link || "",
         image_position: project.image_position || "50% 50%",
         file_url: project.file_url || "",
+        price_range: project.price_range || "",
+        duration: project.duration || "",
+        industry: project.industry || ""
       });
+      // Initialize images
+      if (project.image_url) {
+        setProjectImages(project.image_url.split(',').map((url, index) => ({
+          id: `existing-${index}`,
+          url: url.trim(),
+          preview: url.trim()
+        })));
+      } else {
+        setProjectImages([]);
+      }
+
     } else {
       resetForm();
     }
     setIsProjectDialogOpen(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      const newImages = newFiles.map(file => ({
+        id: `new-${Math.random().toString(36).substr(2, 9)}`,
+        file,
+        preview: URL.createObjectURL(file)
+      }));
+      setProjectImages(prev => [...prev, ...newImages]);
+    }
+  };
+
+  const moveImage = (index: number, direction: 'left' | 'right') => {
+    const newImages = [...projectImages];
+    if (direction === 'left' && index > 0) {
+      [newImages[index], newImages[index - 1]] = [newImages[index - 1], newImages[index]];
+    } else if (direction === 'right' && index < newImages.length - 1) {
+      [newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]];
+    }
+    setProjectImages(newImages);
+  };
+
+  const removeImage = (index: number) => {
+    setProjectImages(prev => prev.filter((_, i) => i !== index));
   };
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>;
@@ -459,7 +540,7 @@ const Admin = () => {
                 {projects.map((project) => (
                   <div key={project.$id} className="bg-card rounded-xl border border-border/50 overflow-hidden group flex flex-col h-full">
                     <div className="aspect-video w-full bg-muted relative">
-                      {project.image_url ? <img src={project.image_url} alt={project.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-muted-foreground/20">{project.title.charAt(0)}</div>}
+                      {project.image_url ? <img src={project.image_url.split(',')[0].trim()} alt={project.title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-muted-foreground/20">{project.title.charAt(0)}</div>}
                     </div>
                     <div className="p-4 flex flex-col flex-grow">
                       <h3 className="font-bold text-lg mb-2">{project.title}</h3>
@@ -499,15 +580,65 @@ const Admin = () => {
                 <Input value={projectForm.link} onChange={(e) => setProjectForm({ ...projectForm, link: e.target.value })} placeholder="https://..." />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Project Image</label>
-                <div className="flex gap-2 items-center">
-                  <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] || null)} className="cursor-pointer" />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Price Range</label>
+                  <Input value={projectForm.price_range} onChange={(e) => setProjectForm({ ...projectForm, price_range: e.target.value })} placeholder="$50-$100" />
                 </div>
-                {projectForm.image_url && !imageFile && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <img src={projectForm.image_url} alt="Preview" className="w-10 h-10 object-cover rounded" />
-                    <p className="text-xs text-muted-foreground break-all">{projectForm.image_url}</p>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Duration</label>
+                  <Input value={projectForm.duration} onChange={(e) => setProjectForm({ ...projectForm, duration: e.target.value })} placeholder="1-3 months" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Industry</label>
+                  <Input value={projectForm.industry} onChange={(e) => setProjectForm({ ...projectForm, industry: e.target.value })} placeholder="Healthcare" />
+                </div>
+              </div>
+
+              <div className="space-y-4 border rounded-lg p-4 bg-muted/20">
+                <label className="text-sm font-medium">Manage Project Images</label>
+
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="cursor-pointer"
+                  />
+                </div>
+
+                {projectImages.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4">
+                    {projectImages.map((img, idx) => (
+                      <div key={img.id} className="relative group bg-background rounded-lg border border-border overflow-hidden shadow-sm hover:shadow-md transition-all">
+                        <div className="aspect-square relative">
+                          <img src={img.preview} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+                          {/* Overlay Actions */}
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                            <div className="flex gap-2">
+                              <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20" onClick={() => moveImage(idx, 'left')} disabled={idx === 0}>
+                                <ArrowLeft className="w-4 h-4" />
+                              </Button>
+                              <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20" onClick={() => moveImage(idx, 'right')} disabled={idx === projectImages.length - 1}>
+                                <ArrowRight className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <Button type="button" size="icon" variant="destructive" className="h-8 w-8" onClick={() => removeImage(idx)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          {/* Index Badge */}
+                          <div className="absolute top-2 left-2 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded backdrop-blur-sm">
+                            #{idx + 1}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border/50 rounded-lg">
+                    No images selected
                   </div>
                 )}
               </div>
@@ -560,7 +691,7 @@ const Admin = () => {
                   <label className="text-sm font-medium">Live Preview (Card View)</label>
                   <div className="aspect-video w-full bg-muted relative overflow-hidden rounded-t-2xl isolate border border-border">
                     <img
-                      src={projectForm.image_url}
+                      src={projectImages.length > 0 ? projectImages[0].preview : ""}
                       alt="Preview"
                       className="w-full h-full object-cover transition-transform duration-500"
                       style={{ objectPosition: projectForm.image_position }}

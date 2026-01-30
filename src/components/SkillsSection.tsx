@@ -53,7 +53,7 @@ const SkillsSection = () => {
             {tools.map((tool, index) => (
               <div
                 key={tool.name}
-                className="group relative p-8 bg-card dark:bg-white/5 rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-2 border border-border dark:border-white/10 hover:border-accent/50 dark:hover:border-accent/50 overflow-hidden"
+                className="group relative p-8 bg-card/50 dark:bg-white/5 backdrop-blur-sm rounded-2xl shadow-soft hover:shadow-elevated transition-all duration-300 hover:-translate-y-2 border border-border/50 overflow-hidden"
               >
                 <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-accent/10 transition-colors" />
                 <div className="relative">
@@ -78,7 +78,7 @@ const SkillsSection = () => {
               {services.map((service) => (
                 <span
                   key={service}
-                  className="px-5 py-2.5 bg-card rounded-full text-sm font-medium text-foreground border border-border/50 shadow-soft hover:shadow-elevated hover:border-accent/30 transition-all duration-300 cursor-default"
+                  className="px-5 py-2.5 bg-card/50 backdrop-blur-sm rounded-full text-sm font-medium text-foreground border border-border/50 shadow-soft hover:shadow-elevated hover:border-accent/30 transition-all duration-300 cursor-default"
                 >
                   {service}
                 </span>
